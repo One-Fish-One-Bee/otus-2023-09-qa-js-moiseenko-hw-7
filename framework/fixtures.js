@@ -11,9 +11,7 @@ export const dynamicUserCredentil = () => {
     }
 }
 
-export const existingUser = () => {
-    return {
-        userName: 'test',
-        password: faker.internet.password({ length: 16, pattern: /[A-Z]/ })
-    }
+export const existingUser = {
+    userName: 'test',
+    password: faker.internet.password({ length: 16, pattern: /[A-Z]/ })
 }

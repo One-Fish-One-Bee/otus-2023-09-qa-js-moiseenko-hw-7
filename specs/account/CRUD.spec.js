@@ -2,7 +2,7 @@
 // в файл подтягиваем настройки окружения, динамические данные, набор функций и ождиемые данные
 import testConfig from "../../framework/config";
 import { dynamicUserCredentil } from "../../framework/fixtures";
-import { account, constructor } from "../../framework/services";
+import { booksStore, constructor } from "../../framework/services";
 import expectData from "../../framework/expectData";
 
 
@@ -13,7 +13,7 @@ describe("Функциональное тестирование API по цик�
     const url = constructor.createUrl(testConfig.baseUrl, testConfig.endpointsAccount.user)
     const headers = constructor.createHeaders()
     const options = constructor.createOptions(testConfig.methods.post, headers, user.userCredentil)
-    const response = await account.request(url, options)
+    const response = await booksStore.request(url, options)
     const data = await response.json()
     user.userId = data.userID
 
@@ -24,7 +24,7 @@ describe("Функциональное тестирование API по цик�
     const url = constructor.createUrl(testConfig.baseUrl, testConfig.endpointsAccount.generateToken)
     const headers = constructor.createHeaders()
     const options = constructor.createOptions(testConfig.methods.post, headers, user.userCredentil)
-    const response = await account.request(url, options)
+    const response = await booksStore.request(url, options)
     const data = await response.json()
     user.token = data.token
 
@@ -36,7 +36,7 @@ describe("Функциональное тестирование API по цик�
     const url = constructor.createUrl(testConfig.baseUrl, testConfig.endpointsAccount.authorized)
     const headers = constructor.createHeaders()
     const options = constructor.createOptions(testConfig.methods.post, headers, user.userCredentil)
-    const response = await account.request(url, options)
+    const response = await booksStore.request(url, options)
     const data = await response.json()
 
     expect(response.status).toBe(200)
@@ -46,7 +46,7 @@ describe("Функциональное тестирование API по цик�
     const url = constructor.createUrl(testConfig.baseUrl, testConfig.endpointsAccount.user, `/${user.userId}`)
     const headers = constructor.createHeaders(user.token)
     const options = constructor.createOptions(testConfig.methods.get, headers)
-    const response = await account.request(url, options)
+    const response = await booksStore.request(url, options)
     const data = await response.json()
 
     expect(response.status).toBe(200)
@@ -57,7 +57,7 @@ describe("Функциональное тестирование API по цик�
     const url = constructor.createUrl(testConfig.baseUrl, testConfig.endpointsAccount.user, `/${user.userId}`)
     const headers = constructor.createHeaders(user.token)
     const options = constructor.createOptions(testConfig.methods.del, headers)
-    const response = await account.request(url, options)
+    const response = await booksStore.request(url, options)
 
     expect(response.status).toBe(204)
   })
@@ -65,7 +65,7 @@ describe("Функциональное тестирование API по цик�
     const url = constructor.createUrl(testConfig.baseUrl, testConfig.endpointsAccount.authorized)
     const headers = constructor.createHeaders()
     const options = constructor.createOptions(testConfig.methods.post, headers, user.userCredentil)
-    const response = await account.request(url, options)
+    const response = await booksStore.request(url, options)
     const data = await response.json()
 
     expect(response.status).toBe(404)
