@@ -1,74 +1,59 @@
 
-// в файл подтягиваем настройки окружения, динамические данные, набор функций и ождиемые данные
-import testConfig from "../../framework/config";
-import { dynamicUserCredentil } from "../../framework/fixtures";
-import { booksStore, constructor } from "../../framework/services";
-import expectData from "../../framework/expectData";
+import { config } from "../../framework/config.js"
+import { dynamicUserCredentil } from "../../framework/fixtures"
+import expectData from "../../framework/expectData.js";
+import { localRequest } from "../../framework/services"
+const baseUrl = config.baseUrl
 
-
-
-describe("Функциональное тестирование API по циклу CRUD", () => {
+describe("Позитивные сценарии", () => {
   let user = { userCredentil: dynamicUserCredentil() }
   test("Пользователь успешно создан", async () => {
-    const url = constructor.createUrl(testConfig.baseUrl, testConfig.endpointsAccount.user)
-    const headers = constructor.createHeaders()
-    const options = constructor.createOptions(testConfig.methods.post, headers, user.userCredentil)
-    const response = await booksStore.request(url, options)
-    const data = await response.json()
-    user.userId = data.userID
 
-    expect(response.status).toBe(201)
-    expect(user.userCredentil.userName).toBe(data.username)
+    const responseCreateUser = await localRequest.account.createUser(baseUrl, user)
+    const jsonResponseCreateUser = await responseCreateUser.json()
+
+    expect(responseCreateUser.status).toBe(201)
+    user.userId = jsonResponseCreateUser.userID
   })
   test("Токен успешно получен", async () => {
-    const url = constructor.createUrl(testConfig.baseUrl, testConfig.endpointsAccount.generateToken)
-    const headers = constructor.createHeaders()
-    const options = constructor.createOptions(testConfig.methods.post, headers, user.userCredentil)
-    const response = await booksStore.request(url, options)
-    const data = await response.json()
-    user.token = data.token
 
-    expect(response.status).toBe(200)
-    expect(data.status).toBe("Success")
-    expect(data.result).toBe("User authorized successfully.")
-  })
-  test("Авторизация прошла успешно", async () => {
-    const url = constructor.createUrl(testConfig.baseUrl, testConfig.endpointsAccount.authorized)
-    const headers = constructor.createHeaders()
-    const options = constructor.createOptions(testConfig.methods.post, headers, user.userCredentil)
-    const response = await booksStore.request(url, options)
-    const data = await response.json()
+    const responseGenerateToken = await localRequest.account.generateToken(baseUrl, user)
+    const jsonResponseGenerateToken = await responseGenerateToken.json()
 
-    expect(response.status).toBe(200)
-    expect(data).toBe(true)
+    expect(responseGenerateToken.status).toBe(200)
+    user.token = jsonResponseGenerateToken.token
   })
-  test("Успешное получение информации о пользователе ", async () => {
-    const url = constructor.createUrl(testConfig.baseUrl, testConfig.endpointsAccount.user, `/${user.userId}`)
-    const headers = constructor.createHeaders(user.token)
-    const options = constructor.createOptions(testConfig.methods.get, headers)
-    const response = await booksStore.request(url, options)
-    const data = await response.json()
+  test("Пользователь успешно авторизованн", async () => {
 
-    expect(response.status).toBe(200)
-    expect(data.username).toBe(user.userCredentil.userName)
-    expect(data.userId).toBe(user.userId)
-  })
-  test("Успешное удаление пользователя ", async () => {
-    const url = constructor.createUrl(testConfig.baseUrl, testConfig.endpointsAccount.user, `/${user.userId}`)
-    const headers = constructor.createHeaders(user.token)
-    const options = constructor.createOptions(testConfig.methods.del, headers)
-    const response = await booksStore.request(url, options)
+    const responseAuthorized = await localRequest.account.authorized(baseUrl, user)
+    const jsonResponseAuthorized = await responseAuthorized.json()
 
-    expect(response.status).toBe(204)
+    expect(responseAuthorized.status).toBe(200)
+    expect(jsonResponseAuthorized).toBe(true)
   })
-  test("Пользователь не существует", async () => {
-    const url = constructor.createUrl(testConfig.baseUrl, testConfig.endpointsAccount.authorized)
-    const headers = constructor.createHeaders()
-    const options = constructor.createOptions(testConfig.methods.post, headers, user.userCredentil)
-    const response = await booksStore.request(url, options)
-    const data = await response.json()
+  test("Успешный запрос информации о пользователе", async () => {
 
-    expect(response.status).toBe(404)
-    expect(expectData.userNotFound).toEqual(data)
+    const responseGetUser = await localRequest.account.getUser(baseUrl, user)
+    const jsonResponseGetUser = await responseGetUser.json()
+
+    expect(responseGetUser.status).toBe(200)
   })
+  test("Успешное удаление пользователя", async () => {
+
+    const responseDelUser = await localRequest.account.delUser(baseUrl, user)
+    const jsonResponseDelUser = await responseDelUser.text()
+
+    expect(responseDelUser.status).toBe(204)
+  })
+  test("По удалённому пользователю нет информации", async () => {
+
+    const responseGetUser = await localRequest.account.getUser(baseUrl, user)
+    const jsonResponseGetUser = await responseGetUser.json()
+
+    console.log(jsonResponseGetUser)
+
+    expect(responseGetUser.status).toBe(401)
+    expect(jsonResponseGetUser).toEqual(expectData.userNotFound)
+  })
+
 })

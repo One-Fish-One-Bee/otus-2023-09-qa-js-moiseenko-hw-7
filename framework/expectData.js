@@ -20,6 +20,14 @@ const expectData = {
         userId: 'f26ae0f3-5b84-48e5-b8e2-790708e8d9d0',
         username: 'Aleen_Donnelly@hotmail.com',
         books: []
+    },
+    isdbnNotFound: {
+        code: '1205',
+        message: 'ISBN supplied is not available in Books Collection!'
+    },
+    isbnConflict: {
+        code: '1206',
+        message: "ISBN supplied is not available in User's Collection!"
     }
 }
 

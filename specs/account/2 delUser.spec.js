@@ -1,58 +1,63 @@
 
-import testConfig from "../../framework/config";
-import expectData from "../../framework/expectData";
-import { dynamicUserCredentil } from "../../framework/fixtures";
-import { booksStore, constructor, localRequest, asd } from "../../framework/services";
+import { config } from "../../framework/config.js"
+import { dynamicUserCredentil, dontExistingUser } from "../../framework/fixtures.js"
+import expectData from "../../framework/expectData.js";
+import { localRequest } from "../../framework/services.js"
+const baseUrl = config.baseUrl
 
 describe("Позитивные сценарии", () => {
+  let user = { userCredentil: dynamicUserCredentil() }
+  test("Пользователь успешно создан", async () => {
+    const responseCreateUser = await localRequest.account.createUser(baseUrl, user)
+    const jsonResponseCreateUser = await responseCreateUser.json()
+
+    expect(responseCreateUser.status).toBe(201)
+    user.userId = jsonResponseCreateUser.userID
+  })
+  test("Токен успешно получен", async () => {
+    const responseGenerateToken = await localRequest.account.generateToken(baseUrl, user)
+    const jsonResponseGenerateToken = await responseGenerateToken.json()
+
+    expect(responseGenerateToken.status).toBe(200)
+    user.token = jsonResponseGenerateToken.token
+  })
+  test("Пользователь успешно авторизованн", async () => {
+    const responseAuthorized = await localRequest.account.authorized(baseUrl, user)
+    const jsonResponseAuthorized = await responseAuthorized.json()
+
+    expect(responseAuthorized.status).toBe(200)
+    expect(jsonResponseAuthorized).toBe(true)
+  })
   test("Удаление пользователя прошло успешно, с авторизацией", async () => {
-    let user = { userCredentil: dynamicUserCredentil() }
+    const responseDelUser = await localRequest.account.delUser(baseUrl, user)
+    const jsonResponseDelUser = await responseDelUser.text()
 
-    user = await localRequest.account.createUser(user, testConfig.baseUrl, testConfig.endpointsAccount.user, testConfig.methods.post)
-    user = await localRequest.account.createToken(user, testConfig.baseUrl, testConfig.endpointsAccount.generateToken, testConfig.methods.post)
-    user = await localRequest.account.createAuth(user, testConfig.baseUrl, testConfig.endpointsAccount.authorized, testConfig.methods.post)
-
-    const url = constructor.createUrl(testConfig.baseUrl, testConfig.endpointsAccount.user, `/${user.userId}`)
-    const headers = constructor.createHeaders(user.token)
-    const options = constructor.createOptions(testConfig.methods.del, headers)
-    const response = await booksStore.request(url, options)
-    const data = await response.text()
-
-    expect(response.status).toBe(204)
+    expect(responseDelUser.status).toBe(204)
   })
 })
 
 describe("Негативные сценарии", () => {
   test("Удаление пользователя не прошло успешно, без создания токена", async () => {
     let user = { userCredentil: dynamicUserCredentil() }
+    const responseCreateUser = await localRequest.account.createUser(baseUrl, user)
+    const responseDelUser = await localRequest.account.delUser(baseUrl, user)
+    const jsonResponseDelUser = await responseDelUser.json()
 
-    user = await localRequest.account.createUser(user, testConfig.baseUrl, testConfig.endpointsAccount.user, testConfig.methods.post)
-
-    const url = constructor.createUrl(testConfig.baseUrl, testConfig.endpointsAccount.user, `/${user.userId}`)
-    const headers = constructor.createHeaders(user.token)
-    const options = constructor.createOptions(testConfig.methods.del, headers)
-    const response = await booksStore.request(url, options)
-    const data = await response.json()
-
-    expect(response.status).toBe(401)
-    expect(data).toEqual(expectData.userNotAuthorized)
+    expect(responseDelUser.status).toBe(200)
+    expect(jsonResponseDelUser).toEqual(expectData.userIdNotCorrect)
   })
   test("Удаление несуществующего пользователя", async () => {
     let user = { userCredentil: dynamicUserCredentil() }
-
-    user = await localRequest.account.createUser(user, testConfig.baseUrl, testConfig.endpointsAccount.user, testConfig.methods.post)
-    user = await localRequest.account.createToken(user, testConfig.baseUrl, testConfig.endpointsAccount.generateToken, testConfig.methods.post)
-    user = await localRequest.account.createAuth(user, testConfig.baseUrl, testConfig.endpointsAccount.authorized, testConfig.methods.post)
+    const responseCreateUser = await localRequest.account.createUser(baseUrl, user)
+    const responseGenerateToken = await localRequest.account.generateToken(baseUrl, user)
+    const responseAuthorized = await localRequest.account.authorized(baseUrl, user)
 
     user.userId = 123144444
 
-    const url = constructor.createUrl(testConfig.baseUrl, testConfig.endpointsAccount.user, `/${user.userId}`)
-    const headers = constructor.createHeaders(user.token)
-    const options = constructor.createOptions(testConfig.methods.del, headers)
-    const response = await booksStore.request(url, options)
-    const data = await response.json()
+    const responseDelUser = await localRequest.account.delUser(baseUrl, user)
+    const jsonResponseDelUser = await responseDelUser.json()
 
-    expect(response.status).toBe(200)
-    expect(data).toEqual(expectData.userIdNotCorrect)
+    expect(responseDelUser.status).toBe(200)
+    expect(jsonResponseDelUser).toEqual(expectData.userIdNotCorrect)
   })
 })

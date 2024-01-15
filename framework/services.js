@@ -1,154 +1,225 @@
-import testConfig from "../framework/config";
-
-export const booksStore = {
-    async request(url, options) {
-        const response = await fetch(url, options)
-        return response
-    }
-}
 
 export const localRequest = {
+    baseUrl: '',
     account: {
-        async createUser(body) {
-            const params = constructor.createParams(null, "post", testConfig.baseUrl, testConfig.endpointsAccount.user, null, body.userCredentil)
-            const response = await booksStore.request(params.url, params.options)
-            const data = await response.json()
-            body.userId = data.userID
-            return body
+        async createUser(baseUrl, body) {
+            const myHeaders = new Headers({
+                "accept": "application/json",
+                "Content-Type": "application/json"
+            });
+            try {
+                const response = await fetch(`${baseUrl}/Account/v1/User`, {
+                    method: "POST",
+                    headers: myHeaders,
+                    body: JSON.stringify(body.userCredentil)
+                });
+                console.log("Успех, статус код:", JSON.stringify(response.status))
+                return response
+            } catch (error) {
+                console.log("Ошибка:", error)
+            }
         },
-        async createToken(body) {
-            let params = constructor.createParams(null, "post", testConfig.baseUrl, testConfig.endpointsAccount.generateToken, null, body.userCredentil)
-            const response = await booksStore.request(params.url, params.options)
-            const data = await response.json()
-            body.token = data.token
-            return body
+        async generateToken(baseUrl, body) {
+            const myHeaders = new Headers({
+                "accept": "application/json",
+                "Content-Type": "application/json"
+            });
+            try {
+                const response = await fetch(`${baseUrl}/Account/v1/GenerateToken`, {
+                    method: "POST",
+                    headers: myHeaders,
+                    body: JSON.stringify(body.userCredentil)
+                });
+                console.log("Успех, статус код:", JSON.stringify(response.status))
+                return response
+            } catch (error) {
+                console.log("Ошибка:", error)
+            }
         },
-        async createAuth(body) {
-            let params = constructor.createParams(null, "post", testConfig.baseUrl, testConfig.endpointsAccount.authorized, null, body.userCredentil)
-            const response = await booksStore.request(params.url, params.options)
-            const data = await response.json()
-            body.auth = data
-            return body
+        async authorized(baseUrl, body) {
+            const myHeaders = new Headers({
+                "accept": "application/json",
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${body.token}`
+            });
+            try {
+                const response = await fetch(`${baseUrl}/Account/v1/Authorized`, {
+                    method: "POST",
+                    headers: myHeaders,
+                    body: JSON.stringify(body.userCredentil)
+                });
+                console.log("Успех, статус код:", JSON.stringify(response.status))
+                return response
+            } catch (error) {
+                console.log("Ошибка:", error)
+            }
         },
-        async delUser(body) {
-            let params = constructor.createParams(body.token, "delete", testConfig.baseUrl, testConfig.endpointsAccount.user, body.userId, null)
-            const response = await booksStore.request(params.url, params.options)
-            body.statusDelete = response.status
-            return body
+        async getUser(baseUrl, body) {
+            const myHeaders = new Headers({
+                "accept": "application/json",
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${body.token}`
+            });
+            try {
+                const response = await fetch(`${baseUrl}/Account/v1/User/${body.userId}`, {
+                    method: "GET",
+                    headers: myHeaders
+                });
+                console.log("Успех, статус код:", JSON.stringify(response.status))
+                return response
+            } catch (error) {
+                console.log("Ошибка:", error)
+            }
+        },
+        async delUser(baseUrl, body) {
+            const myHeaders = new Headers({
+                "accept": "application/json",
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${body.token}`
+            });
+            try {
+                const response = await fetch(`${baseUrl}/Account/v1/User/${body.userId}`, {
+                    method: "DELETE",
+                    headers: myHeaders
+                });
+                /*console.log("Успех, статус код:", JSON.stringify(response.status))*/
+                return response
+            } catch (error) {
+                console.log("Ошибка:", error)
+            }
         }
     },
     booksStore: {
-        async getBooks(body) {
-            let params = constructor.createParams(null, "get", testConfig.baseUrl, testConfig.endpointsBookStore.books, null, null)
-            const response = await booksStore.request(params.url, params.options)
-            const data = await response.json()
-            body.books = data.books[0]
-            return body
+        async getBooks(baseUrl) {
+            const myHeaders = new Headers({
+                "accept": "application/json",
+                "Content-Type": "application/json"
+            });
+            try {
+                const response = await fetch(`${baseUrl}/BookStore/v1/Books`, {
+                    method: "GET",
+                    headers: myHeaders
+                });
+                console.log("Успех, статус код:", JSON.stringify(response.status))
+                return response
+            } catch (error) {
+                console.log("Ошибка:", error)
+            }
         },
-        async addBooks(body) {
-            let body2 = {
+        async createBooks(baseUrl, body) {
+            const myHeaders = new Headers({
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${body.token}`
+            });
+            const myBody = {
                 "userId": body.userId,
                 "collectionOfIsbns": [
                     {
-                        "isbn": body.books.isbn
+                        "isbn": body.isbn
                     }
                 ]
             }
-            let params = constructor.createParams(body.token, "post", testConfig.baseUrl, testConfig.endpointsBookStore.books, null, body2)
-            const response = await booksStore.request(params.url, params.options)
-            const data = await response.json()
-            body.isbn = data.isbn
-            return body
+            try {
+                const response = await fetch(`${baseUrl}/BookStore/v1/Books`, {
+                    method: "POST",
+                    headers: myHeaders,
+                    body: JSON.stringify(myBody)
+                });
+                console.log("Успех, статус код:", JSON.stringify(response.status))
+                return response
+            } catch (error) {
+                console.log("Ошибка:", error)
+            }
         },
-        async updateBooks(baseUrl, endpoint, method, body) {
-            let params = constructor.createParams(baseUrl, endpoint, method, body.userCredentil)
-            const response = await booksStore.request(params.url, params.options)
-            const data = await response.json()
-            body.isbn = data.books[0].isbn
-            return body
+        async updateBooks(baseUrl, body) {
+            const myHeaders = new Headers({
+                "accept": "application/json",
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${body.token}`
+            });
+            const myBody = {
+                "userId": body.userId,
+                "isbn": body.isbn2
+            }
+            try {
+                const response = await fetch(`${baseUrl}/BookStore/v1/Books/${body.isbn}`, {
+                    method: "PUT",
+                    headers: myHeaders,
+                    body: JSON.stringify(myBody)
+                });
+                console.log("Успех, статус код:", JSON.stringify(response.status))
+                return response
+            } catch (error) {
+                console.log("Ошибка:", error)
+            }
         },
-        async getBook(baseUrl, endpoint, method, body) {
-            let params = constructor.createParams(baseUrl, endpoint, method, body.userCredentil)
-            const response = await booksStore.request(params.url, params.options)
-            const data = await response.json()
-            body.book = data.book
-            return body
+        async getBook(isbn) {
+            const myHeaders = new Headers({
+                "accept": "application/json",
+                "Content-Type": "application/json"
+            });
+            try {
+                const url = `${localRequest.baseUrl}/BookStore/v1/Book?ISBN=${isbn}`
+                const response = await fetch(url, {
+                    method: "GET",
+                    headers: myHeaders
+                });
+                console.log("Успех, статус код:", JSON.stringify(response.status))
+                return response
+            } catch (error) {
+                console.log("Ошибка:", error)
+            }
         },
-        async delBook(baseUrl, endpoint, method, body) {
-            let params = constructor.createParams(baseUrl, endpoint, method, body.userCredentil)
-            const response = await booksStore.request(params.url, params.options)
-            const data = await response.json()
-            body.message = data.message
-            return body
-        }
-    }
-}
+        async delBook(baseUrl, body) {
+            const myHeaders = new Headers({
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${body.token}`
+            });
+            let myBody = {
+                "userId": body.userId,
+                "isbn": body.isbn
+            }
+            if (Object.keys(body).includes('isbn2')) {
+                myBody = {
+                    "userId": body.userId,
+                    "isbn": body.isbn2
+                }
+            }
+            try {
+                const response = await fetch(`${baseUrl}/BookStore/v1/Book`, {
+                    method: "DELETE",
+                    headers: myHeaders,
+                    body: JSON.stringify(myBody)
+                });
+                console.log("Успех, статус код:", JSON.stringify(response.status))
+                return response
+            } catch (error) {
+                console.log("Ошибка:", error)
+            }
+        },
+        async paramsDelBook(baseUrl, body) {
+            const myHeaders = new Headers({
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${body.token}`
+            });
+            let myBody = {
+                "userId": body.userId,
+                "isbn": body.isbn
+            }
+            if (Object.keys(body).includes('isbn2')) {
+                myBody = {
+                    "userId": body.userId,
+                    "isbn": body.isbn2
+                }
+            }
 
-// создаём объект constructor
-export const constructor = {
-    createUrl(baseUrl, endpoint, additionalPath = null) {
-        let url
-        switch (additionalPath) {
-            case null:
-                url = `${baseUrl}${endpoint}`
-                break;
-            default:
-                url = `${baseUrl}${endpoint}${additionalPath}`
-                break;
-        }
-        return url
-    },
-    createHeaders(authorization = null) {
-        let headers
-        switch (authorization) {
-            case null:
-                headers = {
-                    'Content-Type': 'application/json'
-                }
-                break;
-            default:
-                headers = {
-                    'accept': 'application/json',
-                    'Authorization': `Bearer ${authorization}`
-                }
-                break;
-        }
-        return headers
-    },
-    createOptions(method, headers, body = null) {
-        let options
-        switch (body) {
-            case null:
-                options = {
-                    method: method,
-                    headers: headers,
-                }
-                break;
-            default:
-                options = {
-                    method: method,
-                    headers: headers,
-                    body: JSON.stringify(body)
-                }
-                break;
-        }
-        return options
-    },
-    createParams(authorization = null, method, baseUrl, endpoint, additionalPath = null, body = null) {
-        let options
-        let url = constructor.createUrl(baseUrl, endpoint, additionalPath)
-        let headers = constructor.createHeaders(authorization)
-        switch (body) {
-            case null:
-                options = constructor.createOptions(method, headers)
-                break;
-            default:
-                options = constructor.createOptions(method, headers, body)
-                break;
-        }
-        return {
-            url: url,
-            options: options
+            const response = await fetch(`${baseUrl}/BookStore/v1/Book`, {
+                method: "DELETE",
+                headers: myHeaders,
+                body: JSON.stringify(myBody)
+            });
+
+            return JSON.stringify(response.status)
         }
     }
 }

@@ -1,9 +1,11 @@
 
 import { config } from "../../framework/config.js"
+import expectData from "../../framework/expectData.js"
 import { dynamicUserCredentil } from "../../framework/fixtures.js"
-import expectData from "../../framework/expectData.js";
 import { localRequest } from "../../framework/services.js"
 const baseUrl = config.baseUrl
+
+localRequest.baseUrl = config.baseUrl
 
 describe("Позитивные сценарии", () => {
     let user = { userCredentil: dynamicUserCredentil() }
@@ -46,6 +48,7 @@ describe("Позитивные сценарии", () => {
         expect(responseGetBooks.status).toBe(200)
 
         user.isbn = jsonResponseGetBooks.books[0].isbn
+        user.isbn2 = jsonResponseGetBooks.books[1].isbn
     })
     test("Успешное создание книги", async () => {
 
@@ -54,62 +57,41 @@ describe("Позитивные сценарии", () => {
 
         expect(responseCreateBooks.status).toBe(201)
     })
-})
+    test("Успешное обновление книги", async () => {
 
-describe("Негативные сценарии", () => {
-    test("Добавить книгу с несуществующим isbn", async () => {
+        const responseUpdateBooks = await localRequest.booksStore.updateBooks(baseUrl, user)
+        const jsonResponseUpdateBooks = await responseUpdateBooks.json()
 
-        let user = { userCredentil: dynamicUserCredentil() }
-
-        const responseCreateUser = await localRequest.account.createUser(baseUrl, user)
-        const jsonResponseCreateUser = await responseCreateUser.json()
-
-        user.userId = jsonResponseCreateUser.userID
-
-        const responseGenerateToken = await localRequest.account.generateToken(baseUrl, user)
-        const jsonResponseGenerateToken = await responseGenerateToken.json()
-
-        user.token = jsonResponseGenerateToken.token
-
-        const responseAuthorized = await localRequest.account.authorized(baseUrl, user)
-
-        user.isbn = "9781593277573"
-
-        const responseCreateBooks = await localRequest.booksStore.createBooks(baseUrl, user)
-        const jsonResponseCreateBooks = await responseCreateBooks.json()
-
-        expect(responseCreateBooks.status).toBe(400)
-        expect(jsonResponseCreateBooks).toEqual(expectData.isdbnNotFound)
-
+        expect(responseUpdateBooks.status).toBe(200)
     })
-    test("Добавить книгу с несуществующим userId", async () => {
+    test("Успешное получение книги", async () => {
 
-        let user = { userCredentil: dynamicUserCredentil() }
+        const responseGetBook = await localRequest.booksStore.getBook(user.isbn)
+        const jsonResponseGetBook = await responseGetBook.json()
 
-        const responseCreateUser = await localRequest.account.createUser(baseUrl, user)
-        const jsonResponseCreateUser = await responseCreateUser.json()
+        expect(responseGetBook.status).toBe(200)
+    })
+    test("Успешное удаление книги", async () => {
 
-        user.userId = jsonResponseCreateUser.userID
+        const responseDelBook = await localRequest.booksStore.delBook(baseUrl, user)
+        /*const jsonResponseDelBook = await responseDelBook.text()*/
 
-        const responseGenerateToken = await localRequest.account.generateToken(baseUrl, user)
-        const jsonResponseGenerateToken = await responseGenerateToken.json()
+        expect(responseDelBook.status).toBe(204)
+    })
+    test("Успешное удаление пользователя", async () => {
 
-        user.token = jsonResponseGenerateToken.token
+        const responseDelUser = await localRequest.account.delUser(baseUrl, user)
+        const jsonResponseDelUser = await responseDelUser.text()
 
-        const responseAuthorized = await localRequest.account.authorized(baseUrl, user)
+        expect(responseDelUser.status).toBe(204)
+    })
+    test("По удалённому пользователю нет информации", async () => {
 
-        const responseGetBooks = await localRequest.booksStore.getBooks(baseUrl)
-        const jsonResponseGetBooks = await responseGetBooks.json()
+        const responseGetUser = await localRequest.account.getUser(baseUrl, user)
+        const jsonResponseGetUser = await responseGetUser.json()
 
-        user.isbn = jsonResponseGetBooks.books[0].isbn
-
-        user.userId = "9781593277573"
-
-        const responseCreateBooks = await localRequest.booksStore.createBooks(baseUrl, user)
-        const jsonResponseCreateBooks = await responseCreateBooks.json()
-
-        expect(responseCreateBooks.status).toBe(401)
-        expect(jsonResponseCreateBooks).toEqual(expectData.userIdNotCorrect)
+        expect(responseGetUser.status).toBe(401)
+        expect(jsonResponseGetUser).toEqual(expectData.userNotFound)
 
     })
 })

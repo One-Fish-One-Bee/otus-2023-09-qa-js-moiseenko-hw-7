@@ -15,3 +15,8 @@ export const existingUser = {
     userName: 'test',
     password: faker.internet.password({ length: 16, pattern: /[A-Z]/ })
 }
+
+export const dontExistingUser = {
+    userName: 'test-petr',
+    password: "1aAz-^37skcu!"
+}

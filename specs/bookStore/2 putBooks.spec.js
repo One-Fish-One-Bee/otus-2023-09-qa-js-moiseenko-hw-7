@@ -44,8 +44,8 @@ describe("Позитивные сценарии", () => {
         const jsonResponseGetBooks = await responseGetBooks.json()
 
         expect(responseGetBooks.status).toBe(200)
-
         user.isbn = jsonResponseGetBooks.books[0].isbn
+        user.isbn2 = jsonResponseGetBooks.books[1].isbn
     })
     test("Успешное создание книги", async () => {
 
@@ -54,36 +54,18 @@ describe("Позитивные сценарии", () => {
 
         expect(responseCreateBooks.status).toBe(201)
     })
+    test("Успешное обновление книги", async () => {
+
+        const responseUpdateBooks = await localRequest.booksStore.updateBooks(baseUrl, user)
+        const jsonResponseUpdateBooks = await responseUpdateBooks.json()
+
+        expect(responseUpdateBooks.status).toBe(200)
+    })
 })
 
+
 describe("Негативные сценарии", () => {
-    test("Добавить книгу с несуществующим isbn", async () => {
-
-        let user = { userCredentil: dynamicUserCredentil() }
-
-        const responseCreateUser = await localRequest.account.createUser(baseUrl, user)
-        const jsonResponseCreateUser = await responseCreateUser.json()
-
-        user.userId = jsonResponseCreateUser.userID
-
-        const responseGenerateToken = await localRequest.account.generateToken(baseUrl, user)
-        const jsonResponseGenerateToken = await responseGenerateToken.json()
-
-        user.token = jsonResponseGenerateToken.token
-
-        const responseAuthorized = await localRequest.account.authorized(baseUrl, user)
-
-        user.isbn = "9781593277573"
-
-        const responseCreateBooks = await localRequest.booksStore.createBooks(baseUrl, user)
-        const jsonResponseCreateBooks = await responseCreateBooks.json()
-
-        expect(responseCreateBooks.status).toBe(400)
-        expect(jsonResponseCreateBooks).toEqual(expectData.isdbnNotFound)
-
-    })
-    test("Добавить книгу с несуществующим userId", async () => {
-
+    test("Обновить книгу с на тот же isbn", async () => {
         let user = { userCredentil: dynamicUserCredentil() }
 
         const responseCreateUser = await localRequest.account.createUser(baseUrl, user)
@@ -102,14 +84,49 @@ describe("Негативные сценарии", () => {
         const jsonResponseGetBooks = await responseGetBooks.json()
 
         user.isbn = jsonResponseGetBooks.books[0].isbn
+        user.isbn2 = jsonResponseGetBooks.books[0].isbn
+
+        const responseCreateBooks = await localRequest.booksStore.createBooks(baseUrl, user)
+
+        const responseUpdateBooks = await localRequest.booksStore.updateBooks(baseUrl, user)
+        const jsonResponseUpdateBooks = await responseUpdateBooks.json()
+
+        expect(responseUpdateBooks.status).toBe(400)
+        expect(jsonResponseUpdateBooks).toEqual(expectData.isbnConflict)
+
+    })
+    test("Обновить книгу с несуществующим userId", async () => {
+        let user = { userCredentil: dynamicUserCredentil() }
+
+        const responseCreateUser = await localRequest.account.createUser(baseUrl, user)
+        const jsonResponseCreateUser = await responseCreateUser.json()
+
+        user.userId = jsonResponseCreateUser.userID
+
+        const responseGenerateToken = await localRequest.account.generateToken(baseUrl, user)
+        const jsonResponseGenerateToken = await responseGenerateToken.json()
+
+        user.token = jsonResponseGenerateToken.token
+
+        const responseAuthorized = await localRequest.account.authorized(baseUrl, user)
+
+        const responseGetBooks = await localRequest.booksStore.getBooks(baseUrl)
+        const jsonResponseGetBooks = await responseGetBooks.json()
+
+        user.isbn = jsonResponseGetBooks.books[0].isbn
+        user.isbn2 = jsonResponseGetBooks.books[1].isbn
+
+        const responseCreateBooks = await localRequest.booksStore.createBooks(baseUrl, user)
 
         user.userId = "9781593277573"
 
-        const responseCreateBooks = await localRequest.booksStore.createBooks(baseUrl, user)
-        const jsonResponseCreateBooks = await responseCreateBooks.json()
+        const responseUpdateBooks = await localRequest.booksStore.updateBooks(baseUrl, user)
+        const jsonResponseUpdateBooks = await responseUpdateBooks.json()
 
-        expect(responseCreateBooks.status).toBe(401)
-        expect(jsonResponseCreateBooks).toEqual(expectData.userIdNotCorrect)
+        console.log(jsonResponseUpdateBooks)
+
+        expect(responseUpdateBooks.status).toBe(401)
+        expect(jsonResponseUpdateBooks).toEqual(expectData.userIdNotCorrect)
 
     })
 })
